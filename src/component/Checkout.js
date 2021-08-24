@@ -5,12 +5,26 @@ import RemoveIcon from '@material-ui/icons/Remove';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import { useSelector } from 'react-redux';
-import { AddtoCart, RemovetoCart, Usercartlist, Deletecartitem } from '../store/actions/action';
+import { AddtoCart, RemovetoCart, Usercartlist, Deletecartitem, City, Address, Get_address, Edit_address } from '../store/actions/action';
 import { useDispatch } from 'react-redux';
 import BlockIcon from '@material-ui/icons/Block';
 import Header from "./Header";
 import TextField from '@material-ui/core/TextField';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import axios from "axios";
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import StripeContainer from './StripeContainer'
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+// import { CardElement, Elements, injectStripe, StripeProvider } from "react-stripe-elements";
+
+const stripePromise = loadStripe('pk_test_51Ibk4KSGafLm2PSq84YA7Kn99WYEANFwxWuLrCJ5R4tZogmUmsfIQ9DV5oATk8MNs3b2gPN2LqrI36LqNYFuEnvf00n84GmYNG');
+
+
 const useStyles = makeStyles((theme) => ({
 
     name: {
@@ -112,7 +126,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 export default function Checkout(props) {
 
-    const user_address = useSelector(state => state.LoginReducer.user_address)
+    // const user_address = useSelector(state => state.LoginReducer.user_address)
 
     const classes = useStyles();
     const [loginedit, setloginedit] = useState(false)
@@ -122,9 +136,45 @@ export default function Checkout(props) {
     const user_id = useSelector(state => state.LoginReducer?.id)
     const phone_number = useSelector(state => state.LoginReducer?.phone_number)
 
+
+
     useEffect(() => {
         dispatch(Usercartlist(user_id));
+        dispatch(City());
+        dispatch(Get_address(user_id))
     }, [0])
+
+
+    const [address, setaddress] = useState()
+    const [pincode, setpincode] = useState()
+    const [city, setcity] = useState()
+
+    // console.log(address)
+    // console.log(pincode)
+    // console.log(city)
+
+
+
+    const city_data = useSelector(state => state.CityReducer?.data)
+
+
+    // const [u_address, setu_address] = useState()
+    // console.log(u_address)
+    // const s_address = u_address?.data?.address[0]['address']
+
+    // console.log(u_address)
+    const u_address = useSelector(state => state.AddressReducer?.data?.data?.address)
+
+    const [ad_pincode, setad_pincodee] = useState(u_address && u_address[0]['pincode'])
+    const [city_id, setcity_id] = useState(u_address && u_address[0]['city_id'])
+    const [street_address, setstreet_address] = useState(u_address && u_address[0]['address'])
+
+    // console.log(street_address)
+    // console.log(ad_pincode)
+    // console.log(city_id)
+    // const [street_address,setstreet_address] = useState(s_address)
+    // console.log(street_address)
+
 
     const ca_data = useSelector(state => state.UsercartlistReducer?.data?.data)
     const product_data = useSelector(state => state.GetallproductReducer?.product_data)
@@ -141,6 +191,19 @@ export default function Checkout(props) {
     const handledeleteitem = (id) => {
         dispatch(Deletecartitem(user_id, id, props))
     }
+
+    const [edit_btn, setedit_btn] = useState(false)
+
+    const handleaddress = () => {
+        dispatch(Address(user_id, address, pincode, city))
+        setedit_btn(false)
+    }
+
+    const handleeditaddress = () => {
+        dispatch(Edit_address(user_id, street_address, ad_pincode, city_id))
+        setedit_btn(false)
+    }
+
     return (
         <div>
             <div className={classes.maindiv} style={{}}>
@@ -198,13 +261,14 @@ export default function Checkout(props) {
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
                                         Delivery address<CheckIcon style={{ marginLeft: '15px' }} />
                                     </div>
-                                    {user_address != null ?
-                                        <div style={{ fontSize: '14px', maxWidth: '630px' }}>
+                                    {u_address != null ?
+                                        <div style={{ display: edit_btn ? 'none' : 'block', fontSize: '14px', maxWidth: '630px' }}>
                                             {/* <div> */}
-                                            <span style={{ marginLeft: '6px' }}>tushar paradva 88,chandra lok socity near silicon flat,godadra road,parvat gam,surat,gujarat-395010</span>
+                                            <span style={{ marginLeft: '6px' }}>{street_address}</span>
                                             {/* </div> */}
                                         </div>
                                         :
+
                                         <div>
                                             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", marginTop: '10px' }}>
                                                 <div style={{ display: "block", marginRight: "35px" }}>
@@ -214,26 +278,113 @@ export default function Checkout(props) {
                                                         multiline
                                                         maxRows={4}
                                                         variant="filled"
+                                                        value={address}
+                                                        onChange={e => setaddress(e.target.value)}
                                                     />
                                                 </div>
                                                 <div style={{ display: "block" }}>
-                                                    <TextField id="filled-basic" label="Pin code" variant="filled" />
+                                                    <TextField id="filled-basic" label="Pin code" variant="filled" value={pincode} onChange={e => setpincode(e.target.value)} />
                                                 </div>
-
                                             </div>
+
+                                            <div style={{ display: "flex", flexWrap: "wrap", flexFlow: "column", justifyContent: "space-between", marginTop: '10px' }}>
+                                                {/* <div style={{ display: "block", marginRight: "35px" }}>
+                                                    <TextField id="filled-basic" label="City" variant="filled" />
+                                                </div> */}
+                                                <div style={{ display: "flex" }}>
+                                                    <FormControl variant="filled" className={classes.formControl}>
+                                                        <InputLabel htmlFor="filled-age-native-simple">city-state-country</InputLabel>
+                                                        <Select
+                                                            native
+                                                            // fullWidth="true"
+                                                            value={city}
+                                                            onChange={(e) => setcity(e.target.value)}
+                                                            inputProps={{
+                                                                name: 'city-state-country',
+                                                                id: 'filled-age-native-simple',
+                                                            }}
+                                                        >
+                                                            <option aria-label="None" value="" />
+                                                            {city_data && city_data.data && city_data.data.length > 0 && city_data.data.map((data, i) => (
+                                                                <>
+                                                                    <option key={i} value={data.id}>{data.display_name}</option>
+
+                                                                </>
+                                                            ))}
+                                                        </Select>
+                                                    </FormControl>
+                                                </div>
+                                                <div style={{ display: "flex", marginTop: "10px", justifyContent: 'flex-end' }}>
+                                                    <Button variant="contained" color="primary" onClick={handleaddress} >Add</Button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                    }
+
+                                    {edit_btn &&
+
+                                        <div>
 
                                             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", marginTop: '10px' }}>
                                                 <div style={{ display: "block", marginRight: "35px" }}>
-                                                    <TextField id="filled-basic" label="City" variant="filled" />
+                                                    <TextField
+                                                        id="filled-multiline-flexible"
+                                                        label="Address(full address)"
+                                                        multiline
+                                                        maxRows={4}
+                                                        variant="filled"
+                                                        value={street_address}
+                                                        autoFocus
+                                                        onChange={e => setstreet_address(e.target.value)}
+                                                    />
                                                 </div>
                                                 <div style={{ display: "block" }}>
-                                                    <TextField id="filled-basic" label="Country" variant="filled" />
+                                                    <TextField autoFocus id="filled-basic" label="Pin code" variant="filled"
+                                                        value={ad_pincode}
+                                                        onChange={e => setad_pincodee(e.target.value)}
+                                                    />
                                                 </div>
-
                                             </div>
 
+                                            <div style={{ display: "flex", flexWrap: "wrap", flexFlow: "column", justifyContent: "space-between", marginTop: '10px' }}>
+                                                <div style={{ display: "flex" }}>
+                                                    <FormControl variant="filled" className={classes.formControl}>
+                                                        <InputLabel htmlFor="filled-age-native-simple">city-state-country</InputLabel>
+                                                        <Select
+                                                            native
+
+                                                            value={city_id}
+                                                            onChange={(e) => setcity_id(e.target.value)}
+                                                            inputProps={{
+                                                                name: 'city-state-country',
+                                                                id: 'filled-age-native-simple',
+                                                            }}
+                                                        >
+                                                            <option aria-label="None" value="" />
+                                                            {city_data && city_data.data && city_data.data.length > 0 && city_data.data.map((data, i) => (
+                                                                <>
+                                                                    <option key={i} value={data.id} selected={data.id == city_id}>{data.display_name}</option>
+                                                                </>
+                                                            ))}
+                                                        </Select>
+                                                    </FormControl>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <div style={{ display: "flex", marginTop: "10px", justifyContent: 'flex-end' }}>
+                                                        <Button variant="contained" color="secondary" onClick={() => setedit_btn(false)}  >cancel</Button>
+                                                    </div>
+
+                                                    <div style={{ display: "flex", marginTop: "10px", marginLeft: '5px', justifyContent: 'flex-end' }}>
+                                                        <Button variant="contained" color="primary" onClick={handleeditaddress} >Done</Button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
 
                                         </div>
+
                                     }
                                 </div>
                                 <Button style={{
@@ -247,8 +398,8 @@ export default function Checkout(props) {
                                     background: '#fff',
                                     marginLeft: 'auto',
                                     cursor: 'pointer',
-                                    textTransform: 'uppercase'
-                                }}>Edit</Button>
+                                    textTransform: 'uppercase',
+                                }} onClick={() => setedit_btn(true)}   >Edit</Button>
                             </div>
                         </div>
 
@@ -444,11 +595,12 @@ export default function Checkout(props) {
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
                                         payment options<CheckIcon style={{ marginLeft: '15px' }} />
                                     </div>
-                                    {/* <div style={{ fontSize: '14px', maxWidth: '630px' }}>
-                                        <div>
-                                            <span style={{ marginLeft: '6px' }}>payment</span>
+                                    <div style={{ fontSize: '14px', maxWidth: '630px',marginTop:'30px' }}>
+                                        <div style={{width:'380px'}}>
+                                            <StripeContainer />
                                         </div>
-                                    </div> */}
+                                    </div>
+
                                 </div>
                                 <Button style={{
                                     padding: '0 32px',
@@ -526,3 +678,4 @@ export default function Checkout(props) {
         </div>
     )
 }
+

@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'django_countries'
+    'django_countries',
+    'cities_light',
 
 ]
 AUTH_USER_MODEL="api.User"
@@ -162,3 +163,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=5),
 
 # }
+
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
+CITIES_LIGHT_INCLUDE_COUNTRIES = ['IN']
+CITIES_LIGHT_INCLUDE_CITY_TYPES = ['PPL', 'PPLA', 'PPLA2', 'PPLA3', 'PPLA4', 'PPLC', 'PPLF', 'PPLG', 'PPLL', 'PPLR', 'PPLS', 'STLMT',]
+
+
+
+STRIPE_PUBLIC_KEY = "pk_test_51Ibk4KSGafLm2PSq84YA7Kn99WYEANFwxWuLrCJ5R4tZogmUmsfIQ9DV5oATk8MNs3b2gPN2LqrI36LqNYFuEnvf00n84GmYNG"
+STRIPE_SECRET_KEY = "sk_test_51Ibk4KSGafLm2PSq913WdziBK9Xiag7aADHkoiOjSUUblysgCH1e6q4fr76e09u4rRpogYRjJZezjn7xCmUgTEOs00wcgcrNRb"

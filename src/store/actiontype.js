@@ -1,3 +1,5 @@
+import { Address, City } from "./actions/action";
+
 // login type
 export const LOGINSUCCESS = "loginsuccess";
 export const LOGINFAILL = "loginfaill";
@@ -33,3 +35,17 @@ export const CARTLISTFAILL = "cartlistfaill"
 // delete from cart
 export const DELETECARTITEMSUCCESS = "deletecartitemsuccess"
 export const DELETECARTITEMFAILL = "deletecartitemfaill"
+
+// fetch City
+
+export const CITYSUCCESS = "citysuccess"
+export const CITYFAILL = "cityfaill"
+
+//get user Address
+export const GETADDRESSSUCCESS = "getaddresssuccess"
+export const GETADDRESSFAILL = "getaddressfaill"
+
+
+//edit user Address
+export const EDITADDRESSSUCCESS = "editaddresssuccess"
+export const EDITADDRESSFAILL = "editaddressfaill"

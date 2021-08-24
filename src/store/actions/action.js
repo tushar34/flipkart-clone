@@ -1,17 +1,17 @@
 import axios from "axios";
-import {DELETECARTITEMSUCCESS, DELETECARTITEMFAILL, CARTLISTSUCCESS, CARTLISTFAILL, REMOVETOCARTSUCCESS, REMOVETOCARTFAILL, ADDTOCARTFAILL, ADDTOCARTSUCCESS, LOGINSUCCESS, LOGINFAILL, GETSPECIFICPRODUCTSUCCESS, GETSPECIFICPRODUCTFAILL, REGISTERFAILL, REGISTERSUCCESS, LOGOUTFAILL, LOGOUTSUCCESS, GETPRODUCTSUCCESS, GETPRODUCTFAILL } from "../actiontype"
+import {EDITADDRESSSUCCESS,EDITADDRESSFAILL, GETADDRESSSUCCESS,GETADDRESSFAILL,CITYSUCCESS, CITYFAILL, DELETECARTITEMSUCCESS, DELETECARTITEMFAILL, CARTLISTSUCCESS, CARTLISTFAILL, REMOVETOCARTSUCCESS, REMOVETOCARTFAILL, ADDTOCARTFAILL, ADDTOCARTSUCCESS, LOGINSUCCESS, LOGINFAILL, GETSPECIFICPRODUCTSUCCESS, GETSPECIFICPRODUCTFAILL, REGISTERFAILL, REGISTERSUCCESS, LOGOUTFAILL, LOGOUTSUCCESS, GETPRODUCTSUCCESS, GETPRODUCTFAILL } from "../actiontype"
 
 
 
 
-const loginsuccess = (token, id, phone_number, user_name,user_address) => {
+const loginsuccess = (token, id, phone_number, user_name, user_address) => {
     return {
         type: LOGINSUCCESS,
         token: token,
         user_id: id,
         phone_number: phone_number,
         user_name: user_name,
-        user_address:user_address,
+        user_address: user_address,
     }
 }
 const loginfaill = (err) => {
@@ -35,8 +35,9 @@ export const Login = (phone, password, props) => {
                 const user_name = res.data.user_name;
                 const user_address = res.data.user_address;
                 localStorage.setItem("token", token);
-                dispatch(loginsuccess(token, user_id, phone_number, user_name,user_address));
+                dispatch(loginsuccess(token, user_id, phone_number, user_name, user_address));
                 dispatch(Usercartlist(user_id))
+                dispatch(Get_address(user_id))
                 // props.history.push('/');
             })
             .catch(err => {
@@ -188,7 +189,7 @@ export const RemovetoCart = (id, user_id, props) => {
 }
 
 
-export const Usercartlist = (user_id,props) => {
+export const Usercartlist = (user_id, props) => {
     return dispatch => {
         axios.post("http://127.0.0.1:8000/api/usercartlist/", {
             user_id: user_id
@@ -213,11 +214,11 @@ export const Usercartlist = (user_id,props) => {
 
 
 
-export const Deletecartitem = (user_id,c_id,props) => {
+export const Deletecartitem = (user_id, c_id, props) => {
     return dispatch => {
         axios.post("http://127.0.0.1:8000/api/deletecartitem/", {
             user_id: user_id,
-            cart_product_id:c_id
+            cart_product_id: c_id
         })
             .then(res => {
                 console.log(res)
@@ -225,7 +226,7 @@ export const Deletecartitem = (user_id,c_id,props) => {
                     type: DELETECARTITEMSUCCESS,
                     data: res
                 })
-                dispatch(Usercartlist(user_id,props))
+                dispatch(Usercartlist(user_id, props))
                 // props.history.push('/addtocart')
             })
             .catch(err => {
@@ -233,6 +234,98 @@ export const Deletecartitem = (user_id,c_id,props) => {
                     type: DELETECARTITEMFAILL,
                     error: err
                 })
+            })
+    }
+}
+
+
+export const City = () => {
+    return dispatch => {
+        axios.post("http://127.0.0.1:8000/api/city/", {
+        })
+            .then(res => {
+                console.log(res)
+                dispatch({
+                    type: CITYSUCCESS,
+                    data: res
+                })
+                // dispatch(Usercartlist(user_id,props))
+            })
+            .catch(err => {
+                dispatch({
+                    type: CITYFAILL,
+                    error: err
+                })
+            })
+    }
+}
+
+
+export const Address = (user_id, address, pincode, country_id) => {
+    return dispatch => {
+        axios.post("http://127.0.0.1:8000/api/address/", {
+            user_id:user_id,
+            Address:address,
+            pincode:pincode,
+            country_id:country_id,
+        })
+            .then(res => {
+                console.log(res)
+                dispatch(Get_address(user_id))
+            })
+            .catch(err => {
+                // dispatch({
+                //     type: CITYFAILL,
+                //     error: err
+                // })
+            })
+    }
+}
+
+
+export const Get_address = (user_id) => {
+    return dispatch => {
+        axios.get(`http://127.0.0.1:8000/api/address/${user_id}`, {
+        })
+            .then(res => {
+                console.log(res)
+                dispatch({
+                    type: GETADDRESSSUCCESS,
+                    data: res
+                })
+            })
+            .catch(err => {
+                dispatch({
+                    type: GETADDRESSFAILL,
+                    error: err
+                })
+
+            })
+    }
+}
+
+
+export const Edit_address = (user_id,street_address,pin_code,coutry_id) => {
+    return dispatch => {
+        axios.patch(`http://127.0.0.1:8000/api/edit-address/${user_id}`, {
+            address:street_address,
+            pincode:pin_code,
+            countryid:coutry_id,
+        })
+            .then(res => {
+                console.log(res)
+                dispatch({
+                    type: EDITADDRESSSUCCESS,
+                    data: res
+                })
+                dispatch(Get_address(user_id))
+            })
+            .catch(err => {
+                dispatch({
+                    type: EDITADDRESSFAILL,
+                    error: err
+                })
+
             })
     }
 }
