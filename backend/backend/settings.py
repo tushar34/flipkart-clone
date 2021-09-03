@@ -153,16 +153,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REQUIRED_FIELDS = ['phone_number']
 
 # from datetime import timedelta
-# import datetime
+import datetime
 # SIMPLE_JWT = {
 #     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5)
 # }
 
-# JWT_AUTH = {
-#     # how long the original token is valid for
-#     'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=5),
+JWT_AUTH = {
+    # how long the original token is valid for
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=10),
 
-# }
+}
 
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['IN']

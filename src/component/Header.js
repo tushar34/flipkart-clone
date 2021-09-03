@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
+import Input from '@material-ui/core/Input';
+import clsx from 'clsx';
 // import { useEffect } from 'react';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -12,12 +14,16 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import DehazeIcon from '@material-ui/icons/Dehaze';
 import SearchIcon from '@material-ui/icons/Search';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import Drawer from '@material-ui/core/Drawer';
 // import ListItem from '@material-ui/core/ListItem';
 import LockOpenIcon from '@material-ui/icons/LockOpen';
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import List from '@material-ui/core/List';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import { Button, Divider, ListItem } from '@material-ui/core';
@@ -29,6 +35,9 @@ import Slide from '@material-ui/core/Slide';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import CloseIcon from '@material-ui/icons/Close';
 import { Link } from 'react-router-dom';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -36,10 +45,12 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import DraftsIcon from '@material-ui/icons/Drafts';
 import SendIcon from '@material-ui/icons/Send';
 import { useTheme } from '@material-ui/core';
-import { Login, Register, Logout,Usercartlist } from '../store/actions/action';
+import { Login, Register, Logout, Usercartlist } from '../store/actions/action';
 // import Menu from '@material-ui/core/Menu';
 import { useHistory } from "react-router-dom";
-
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 
 const StyledMenu = withStyles({
     paper: {
@@ -164,8 +175,10 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     dialogcontent: {
+        // height:'auto',
         padding: '0 103px',
         paddingTop: '0px',
+        paddingBottom:"10px",
         [theme.breakpoints.down(450)]: {
             padding: '0 25px',
             paddingTop: '0px',
@@ -185,12 +198,23 @@ const useStyles = makeStyles((theme) => ({
         color: '#f0f0f0',
         lineHeight: '16px',
         fontSize: '12px',
-    }
+    },
+    textField: {
+        width: '25ch',
+    },
+    margin: {
+        margin: theme.spacing(1),
+    },
 }));
 
 
+function Alert(props) {
+    return <MuiAlert elevation={5} variant="filled" {...props} />;
+}
+
+
 export default function Header(props) {
-    console.log(props)
+    // console.log(props)
 
     const total_cart_item = useSelector(state => state.UsercartlistReducer?.data?.data?.cart_data?.length)
 
@@ -198,6 +222,7 @@ export default function Header(props) {
     // store variable
     const token = useSelector(state => state.LoginReducer.token)
     const user_id = useSelector(state => state.LoginReducer.id)
+    const error = useSelector(state => state.LoginReducer?.error)
 
 
     // login variable
@@ -301,8 +326,19 @@ export default function Header(props) {
     );
 
     useEffect(() => {
-        dispatch(Usercartlist(user_id));
+        dispatch(Usercartlist(user_id, token));
     }, [0])
+
+    useEffect(() => {
+        if (error) {
+            setopenalert(true)
+        }
+    }, [error])
+    useEffect(() => {
+        if (token) {
+            setopenalertlogin(true)
+        }
+    }, [token])
 
     const handleMobileMenuOpen = (event) => {
         setMobileMoreAnchorEl(event.currentTarget);
@@ -326,10 +362,12 @@ export default function Header(props) {
         setphone_number('')
         setpassword('')
         setloginDialog(false)
-        dispatch(Login(phone_number, password,props))
+        dispatch(Login(phone_number, password, props))
+
     }
     // call register api
-    const handleRegister = () => {
+    const handleRegister = (e) => {
+        e.preventDefault();
         dispatch(Register(phone_number2, password2, email, username, confirmpassword))
         setphone_number2('')
         setpassword2('')
@@ -340,13 +378,52 @@ export default function Header(props) {
     }
     const handlelogout = () => {
         dispatch(Logout(props))
+        setopendrawer(false)
+        setopenalertlogout(true)
         history.push("/");
     }
-    const handlecart = () =>{
-        history.push("/addtocart");
+    const [openalertcart, setopenalertcart] = useState(false)
+    useEffect(() => {
+        if (total_cart_item == 0) {
+            setopenalertcart(true)
+        }
+    }, [total_cart_item])
+
+    const handlecart = () => {
+        if (total_cart_item == 0) {
+            setopenalertcart(true)
+        }
+        else {
+
+            setopendrawer(false)
+            history.push("/addtocart");
+        }
     }
+    const [openalert, setopenalert] = useState(false);
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setopenalert(false);
+        setopenalertlogin(false)
+        setopenalertlogout(false)
+        setopenalertcart(false)
+    };
+
+    const [openalertlogin, setopenalertlogin] = useState(false)
+    const [openalertlogout, setopenalertlogout] = useState(false)
+
+    const [showPassword, setshowPassword] = useState(false)
+    console.log(showPassword)
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
+    };
+    const [showPassword2, setshowPassword2]= useState(false)
+    const [showPassword3, setshowPassword3]= useState(false)
+
     return (
-        <div style={{ marginBottom: "70px" }}>
+        <div style={{ marginBottom: "20px" }}>
             <AppBar position="static" className={classes.navbar} style={{}}>
                 <Toolbar >
                     <div style={{ display: 'inline-flex', flexGrow: '1' }}>
@@ -374,10 +451,27 @@ export default function Header(props) {
                         <Drawer style={{}} anchor="right" open={opendrawer} onClose={() => setopendrawer(false)}>
                             <div style={{ width: "200px", display: 'flex' }}>
                                 <List style={{ width: "100%", }}>
-                                    <ListItem style={{ cursor: "pointer" }} onClick={handledrawerloginclick}><LockOpenIcon style={{ marginRight: '5px' }} /> login</ListItem>
-                                    <Divider fullWidth style={{ backgroundColor: "black" }} />
-                                    <ListItem style={{ cursor: "pointer" }}> <ShoppingCartIcon style={{ marginRight: '5px' }} />cart</ListItem>
-                                    <Divider fullWidth style={{ backgroundColor: "black" }} />
+                                    {token ? <>
+                                        <ListItem onClick={handlelogout} style={{ cursor: "pointer" }}>
+                                            <ExitToAppIcon style={{ marginRight: '5px' }} /> logout
+                                        </ListItem>
+                                        <Divider fullWidth style={{ backgroundColor: "black" }} />
+                                    </> :
+                                        <>
+                                            <ListItem style={{ cursor: "pointer" }} onClick={handledrawerloginclick}>
+                                                <LockOpenIcon style={{ marginRight: '5px' }} /> login
+                                            </ListItem>
+                                            <Divider fullWidth style={{ backgroundColor: "black" }} />
+                                        </>
+                                    }
+                                    {token ?
+                                        <>
+                                            <ListItem style={{ cursor: "pointer" }} onClick={handlecart} >
+                                                <ShoppingCartIcon style={{ marginRight: '5px' }} />cart
+                                            </ListItem>
+                                            <Divider fullWidth style={{ backgroundColor: "black" }} />
+                                        </>
+                                        : <></>}
                                 </List>
                             </div>
                         </Drawer>
@@ -397,7 +491,7 @@ export default function Header(props) {
                                 }} >Login</Button>
                             }
                         </div>
-
+                        {/* 
 
                         <div style={{ display: 'inline-flex', marginLeft: '40px', alignItems: 'center', justifyContent: 'center' }}>
                             <Typography onClick={(e) => setbtnmore(e.currentTarget)} >More</Typography>
@@ -428,21 +522,24 @@ export default function Header(props) {
                                 </ListItemIcon>
                                 <ListItemText primary="Inbox" />
                             </StyledMenuItem>
-                        </StyledMenu>
+                        </StyledMenu> */}
 
-                        <div style={{ display: 'inline-flex', marginLeft: '40px' }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <ShoppingCartIcon  onClick={handlecart} />
+                        {token &&
+                            <div style={{ display: 'inline-flex', marginLeft: '40px' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <ShoppingCartIcon onClick={handlecart} />
+                                </div>
+                                {token ?
+                                    <div className={classes.cartnumbericon}>
+                                        {total_cart_item}
+                                    </div>
+                                    : <></>}
+                                <div style={{ display: 'inline-flex', marginLeft: '5px', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Typography>Cart</Typography>
+                                </div>
                             </div>
-                            {token ?
-                            <div className={classes.cartnumbericon}>
-                                {total_cart_item }
-                            </div>
-                            :<></>}
-                            <div style={{ display: 'inline-flex', marginLeft: '5px', alignItems: 'center', justifyContent: 'center' }}>
-                                <Typography>Cart</Typography>
-                            </div>
-                        </div>
+
+                        }
                     </div>
 
 
@@ -486,6 +583,30 @@ export default function Header(props) {
             {renderMobileMenu}
             {renderMenu}
 
+            <Snackbar open={openalert} autoHideDuration={3000} onClose={handleClose} >
+                <Alert onClose={handleClose} severity="error" >
+                    given information is not valid
+                </Alert>
+            </Snackbar>
+
+            <Snackbar open={openalertlogin} autoHideDuration={3000} onClose={handleClose} >
+                <Alert onClose={handleClose} severity="success">
+                    login successfully
+                </Alert>
+            </Snackbar>
+
+
+            <Snackbar open={openalertlogout} autoHideDuration={3000} onClose={handleClose} >
+                <Alert onClose={handleClose} severity="info">
+                    Logout successfully
+                </Alert>
+            </Snackbar>
+
+            <Snackbar open={openalertcart} autoHideDuration={3000} onClose={handleClose} >
+                <Alert onClose={handleClose} severity="info">
+                    Your cart empty
+                </Alert>
+            </Snackbar>
 
 
 
@@ -511,16 +632,34 @@ export default function Header(props) {
                                 value={phone_number}
                                 onChange={(e) => setphone_number(e.target.value)}
                             />
-                            <TextField
-                                margin="dense"
-                                id="name"
-                                label="Enter Password"
-                                type="text"
-                                fullWidth
-                                value={password}
-                                onChange={(e) => setpassword(e.target.value)}
-                            />
+                            <FormControl style={{ width: '100%' }} >
+                                <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
+                                <Input
+                                    // margin="dense"
+                                    id="standard-adornment-password"
+                                    label="Enter Password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    fullWidth
+                                    value={password}
+                                    onChange={(e) => setpassword(e.target.value)}
+                                    endAdornment={
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                // onClick={handleClickShowPassword}
+                                                onClick={() => setshowPassword(showPassword => !showPassword)}
+                                                // onClick={()=>alert("6545")}
+                                                onMouseDown={handleMouseDownPassword}
+                                            >
+                                                {showPassword ? <Visibility /> : <VisibilityOff />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    }
+
+                                />
+                            </FormControl>
                         </DialogContent>
+                        {/* <VisibilityOffIcon style={{ position: "absolute", right: '30px', top: '160px' }} /> */}
                     </div>
                     <div style={{ padding: "0px 100px 0px 100px", marginTop: "20px", display: "flex", alignItems: "center", justifyContent: 'center' }}>
                         <Button onClick={handleLogin} fullWidth variant="contained" color="primary" >Login</Button>
@@ -545,59 +684,119 @@ export default function Header(props) {
                             <CloseIcon onClick={() => setregisterDialog(false)} />
                         </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: "center", justifyContent: "center" }}>
-                        <DialogContent className={classes.dialogcontent} style={{}}>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="name"
-                                label="Enter Email Address"
-                                type="text"
-                                value={email}
-                                fullWidth
-                                onChange={e => setemail(e.target.value)}
-                            />
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="name"
-                                label="Enter User Name"
-                                type="text"
-                                fullWidth
-                                value={username}
-                                onChange={e => setusername(e.target.value)}
-                            />
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="name"
-                                label="Enter Phone Number"
-                                type="text"
-                                value={phone_number2}
-                                fullWidth
-                                onChange={e => setphone_number2(e.target.value)}
-                            />
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="name"
-                                label="Enter Password"
-                                type="text"
-                                fullWidth
-                                value={password2}
-                                onChange={e => setpassword2(e.target.value)}
-                            />
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="name"
-                                label="Enter Confirm Password"
-                                type="text"
-                                fullWidth
-                                value={confirmpassword}
-                                onChange={e => setconfirmpassword(e.target.value)}
-                            />
-                            {/* <TextField
+                    <form>
+                        <div style={{ display: 'flex', alignItems: "center", justifyContent: "center" }}>
+                            <DialogContent className={classes.dialogcontent} style={{}}>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Enter Email Address"
+                                    type="text"
+                                    required
+                                    value={email}
+                                    fullWidth
+                                    onChange={e => setemail(e.target.value)}
+                                />
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Enter User Name"
+                                    type="text"
+                                    fullWidth
+                                    required
+                                    value={username}
+                                    onChange={e => setusername(e.target.value)}
+                                />
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Enter Phone Number"
+                                    type="text"
+                                    required
+                                    value={phone_number2}
+                                    fullWidth
+                                    pattern="[1-9]{1}[0-9]{9}"
+                                    maxlength="10"
+                                    onChange={e => setphone_number2(e.target.value)}
+                                />
+                                <FormControl style={{ width: '100%' }} >
+                                    <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
+                                    <Input
+                                        // margin="dense"
+                                        id="standard-adornment-password"
+                                        label="Enter Password"
+                                        type={showPassword2 ? 'text' : 'password'}
+                                        fullWidth
+                                        value={password2}
+                                        onChange={(e) => setpassword2(e.target.value)}
+                                        endAdornment={
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    // onClick={handleClickShowPassword}
+                                                    onClick={() => setshowPassword2(showPassword2 => !showPassword2)}
+                                                    // onClick={()=>alert("6545")}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                >
+                                                    {showPassword2 ? <Visibility /> : <VisibilityOff />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        }
+
+                                    />
+                                </FormControl>
+                                <FormControl style={{ width: '100%' }} >
+                                    <InputLabel htmlFor="standard-adornment-password">Confirm-Password</InputLabel>
+                                    <Input
+                                        // margin="dense"
+                                        id="standard-adornment-password"
+                                        label="Enter Password"
+                                        type={showPassword3 ? 'text' : 'password'}
+                                        fullWidth
+                                        value={confirmpassword}
+                                        onChange={(e) => setconfirmpassword(e.target.value)}
+                                        endAdornment={
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    // onClick={handleClickShowPassword}
+                                                    onClick={() => setshowPassword3(showPassword3 => !showPassword3)}
+                                                    // onClick={()=>alert("6545")}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                >
+                                                    {showPassword3 ? <Visibility /> : <VisibilityOff />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        }
+
+                                    />
+                                </FormControl>
+                                {/* <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Enter Password"
+                                    type="text"
+                                    required
+                                    fullWidth
+                                    value={password2}
+                                    onChange={e => setpassword2(e.target.value)}
+                                /> */}
+                                {/* <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="name"
+                                    label="Enter Confirm Password"
+                                    type="text"
+                                    fullWidth
+                                    required
+                                    value={confirmpassword}
+                                    onChange={e => setconfirmpassword(e.target.value)}
+                                /> */}
+                                {/* <TextField
                                 autoFocus
                                 margin="dense"
                                 id="name"
@@ -605,14 +804,16 @@ export default function Header(props) {
                                 type="text"
                                 fullWidth
                             /> */}
-                        </DialogContent>
-                    </div>
-                    <div style={{ padding: "0px 100px 0px 100px", marginTop: "20px", display: "flex", alignItems: "center", justifyContent: 'center' }}>
-                        <Button onClick={handleRegister} fullWidth variant="contained" color="primary" >continue</Button>
-                    </div>
-                    <div style={{ padding: "0px 100px 0px 100px", textAlign: "center", marginTop: "25px", display: "flex", alignItems: "center", justifyContent: 'center' }}>
-                        <Typography onClick={handlelogin} component={Link} >Existing User? Log in</Typography>
-                    </div>
+                            </DialogContent>
+                        </div>
+                        <div style={{ padding: "0px 100px 0px 100px", marginTop: "20px", display: "flex", alignItems: "center", justifyContent: 'center' }}>
+                            <Button onClick={(e) => handleRegister(e)} fullWidth variant="contained" color="primary" >continue</Button>
+                        </div>
+                        <div style={{ padding: "0px 100px 0px 100px", textAlign: "center", marginTop: "25px", display: "flex", alignItems: "center", justifyContent: 'center' }}>
+                            <Typography onClick={handlelogin} component={Link} >Existing User? Log in</Typography>
+                        </div>
+                    </form>
+
                 </div>
             </Dialog>
 

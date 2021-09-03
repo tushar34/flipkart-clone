@@ -49,3 +49,8 @@ export const GETADDRESSFAILL = "getaddressfaill"
 //edit user Address
 export const EDITADDRESSSUCCESS = "editaddresssuccess"
 export const EDITADDRESSFAILL = "editaddressfaill"
+
+// get data of sub_category
+
+export const GETDATAOFSUBCATEGORYSUCCESS = "getdataofsubcategorysuccess"
+export const GETDATAOFSUBCATEGORYFAIL = "getdataofsubcategoryfaill"

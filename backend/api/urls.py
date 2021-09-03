@@ -14,8 +14,10 @@ urlpatterns = [
     path('deletecartitem/', DeletecartitemView.as_view(), name="deletecartitem"),
     path('city/', CityView.as_view(), name="city"),
     path('address/', AddressView.as_view(), name="address"),
-    path('address/<int:id>/', AddressView.as_view(), name="get-address"),
+    path('get-address/<int:id>', AddressView.as_view(), name="get-address"),
     path('edit-address/<int:id>', AddressView.as_view(), name="edit-address"),
     path('payment', PaymentView.as_view(), name="payment"),
+    path('mobile-data/',Fetchproductofmobile.as_view(), name="mobile-data"),
+    path('sub_category_data/',Fetchproduct_by_sub_category_id.as_view(), name="get-data-by-sub_ca_id"),
 ]
 

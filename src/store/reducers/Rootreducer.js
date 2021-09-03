@@ -8,10 +8,11 @@ import Addtocartreducer from './Addtocart';
 import Usercartlistreducer from './Usercartlist';
 import Cityreducer from './Cityview';
 import Addressreducer from './Address'
+import Productofsuccategoryreducer from './Productofsuccategory';
 const persistConfig = {
   key: 'auth',
   storage: storage,
-  whitelist: ['AddressReducer','LoginReducer','GetallproductReducer','GetspecificproductReducer','AddtocartReducer','UsercartlistReducer','CityReducer']
+  whitelist: ['ProductofsuccategoryReducer','AddressReducer','LoginReducer','GetallproductReducer','GetspecificproductReducer','AddtocartReducer','UsercartlistReducer','CityReducer']
 };
 
 const rootReducer = combineReducers({
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   UsercartlistReducer:Usercartlistreducer,
   CityReducer:Cityreducer,
   AddressReducer:Addressreducer,
+  ProductofsuccategoryReducer:Productofsuccategoryreducer,
 });
 export default persistReducer(persistConfig, rootReducer);
 

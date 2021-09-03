@@ -7,6 +7,7 @@ import Addtocart from './component/Addtocart';
 import Header from './component/Header';
 import Checkout from './component/Checkout';
 import history from './history';
+import Productlist from './component/Productlist';
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route  path='/productdetail' component={Productdetail} />
           <Route  path='/addtocart' component={Addtocart} />
           <Route  path='/checkout' component={Checkout} />
+          <Route  path='/productlist' component={Productlist} />
         </Switch>
       </Router>
     </>

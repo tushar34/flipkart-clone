@@ -13,17 +13,24 @@ import TextField from '@material-ui/core/TextField';
 import { Link, withRouter } from 'react-router-dom';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 import Select from '@material-ui/core/Select';
 import axios from "axios";
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import StripeContainer from './StripeContainer'
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-
+import { useHistory } from 'react-router';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 // import { CardElement, Elements, injectStripe, StripeProvider } from "react-stripe-elements";
 
 const stripePromise = loadStripe('pk_test_51Ibk4KSGafLm2PSq84YA7Kn99WYEANFwxWuLrCJ5R4tZogmUmsfIQ9DV5oATk8MNs3b2gPN2LqrI36LqNYFuEnvf00n84GmYNG');
 
+function Alert(props) {
+    return <MuiAlert elevation={5} variant="filled" {...props} />;
+}
 
 const useStyles = makeStyles((theme) => ({
 
@@ -47,7 +54,7 @@ const useStyles = makeStyles((theme) => ({
     div2: {
         display: "inline-block",
         height: "auto",
-        width: '368px',
+        width: 'auto',
         marginLeft: "16px",
         [theme.breakpoints.down('sm')]: {
             display: "block",
@@ -121,6 +128,78 @@ const useStyles = makeStyles((theme) => ({
             display: "none"
         },
     },
+    card: {
+        width: '380px',
+        [theme.breakpoints.down(440)]: {
+            width: "260px"
+        },
+    },
+    imagediv: {
+        height: '112px',
+        width: '112px',
+        position: 'relative',
+        margin: '0 auto',
+        [theme.breakpoints.down(350)]: {
+            margin: '0',
+        },
+    },
+    nameandpricediv: {
+        padding: '0 24px 12px',
+        verticalAlign: 'top',
+        minHeight: '112px',
+        flex: '1 1',
+        overflow: 'hidden',
+        maxWidth: '460px',
+        [theme.breakpoints.down('sm')]: {
+            display: "flex",
+            flexFlow: "column",
+            justifyContent: "center",
+            alignItems: "center"
+
+        },
+    },
+    editbutton: {
+        padding: '0 32px',
+        height: '40px',
+        borderRadius: '2px',
+        border: '1px solid #e0e0e0',
+        color: '#2874f0',
+        fontSize: '14px',
+        fontWeight: '500',
+        background: '#fff',
+        marginLeft: 'auto',
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+        [theme.breakpoints.down(340)]: {
+            padding: '0',
+        },
+
+    },
+    hideandshowbtn: {
+        padding: '0 32px',
+        height: '40px',
+        borderRadius: '2px',
+        border: '1px solid #e0e0e0',
+        color: '#2874f0',
+        fontSize: '12px',
+        fontWeight: '500',
+        background: '#fff',
+        marginLeft: 'auto',
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+        [theme.breakpoints.down(340)]: {
+            padding: '0',
+        },
+    },
+    ordersummarydiv: {
+        display: "inline-block",
+        width: "600px",
+        [theme.breakpoints.down(340)]: {
+            width: '145px',
+        },
+
+    }
+
 
 
 }));
@@ -136,14 +215,37 @@ export default function Checkout(props) {
     const user_id = useSelector(state => state.LoginReducer?.id)
     const phone_number = useSelector(state => state.LoginReducer?.phone_number)
 
+    const [addtocartalert, setaddtocartalert] = useState(false)
+    const [removealert, setremovealert] = useState(false)
+
+    useEffect(() => {
+        dispatch(Usercartlist(user_id, token));
+        dispatch(City());
+        dispatch(Get_address(user_id, token))
+    }, [0])
+
+    const history = useHistory()
+    const ca_data = useSelector(state => state.UsercartlistReducer?.data?.data)
+
+    useEffect(() => {
+        if (!token) {
+            // setopenalertcart(true)
+            history.push("/")
+
+        }
+
+    }, [0])
+
 
 
     useEffect(() => {
-        dispatch(Usercartlist(user_id));
-        dispatch(City());
-        dispatch(Get_address(user_id))
-    }, [0])
+        if (ca_data?.cart_data?.length == 0) {
+            // setopenalertcart(true)
+            history.push("/")
 
+        }
+
+    }, [ca_data])
 
     const [address, setaddress] = useState()
     const [pincode, setpincode] = useState()
@@ -164,10 +266,19 @@ export default function Checkout(props) {
 
     // console.log(u_address)
     const u_address = useSelector(state => state.AddressReducer?.data?.data?.address)
+    console.log(u_address)
+
+
 
     const [ad_pincode, setad_pincodee] = useState(u_address && u_address[0]['pincode'])
     const [city_id, setcity_id] = useState(u_address && u_address[0]['city_id'])
     const [street_address, setstreet_address] = useState(u_address && u_address[0]['address'])
+    useEffect(() => {
+        console.log("add-useaddress", u_address)
+        setad_pincodee(u_address && u_address[0]['pincode'])
+        setcity_id(u_address && u_address[0]['city_id'])
+        setstreet_address(u_address && u_address[0]['address'])
+    }, [u_address])
 
     // console.log(street_address)
     // console.log(ad_pincode)
@@ -176,33 +287,49 @@ export default function Checkout(props) {
     // console.log(street_address)
 
 
-    const ca_data = useSelector(state => state.UsercartlistReducer?.data?.data)
     const product_data = useSelector(state => state.GetallproductReducer?.product_data)
     const total_cart_item = useSelector(state => state.UsercartlistReducer?.data?.data?.cart_data?.length)
     const total_cart_price = useSelector(state => state.UsercartlistReducer?.data?.data?.total_cart_price)
 
+    const [summarybtn, setsummarybtn] = useState(true)
+
+
     const handleaddtocart = (id) => {
-        dispatch(AddtoCart(id, user_id, props))
+        dispatch(AddtoCart(id, user_id, token, props))
+        setaddtocartalert(true)
     }
     const handleremovetocart = (id) => {
-        dispatch(RemovetoCart(id, user_id, props))
+        dispatch(RemovetoCart(id, user_id, token, props))
+        setaddtocartalert(true)
     }
 
     const handledeleteitem = (id) => {
-        dispatch(Deletecartitem(user_id, id, props))
+        setremovealert(true)
+        dispatch(Deletecartitem(user_id, id, token, props))
     }
 
     const [edit_btn, setedit_btn] = useState(false)
 
     const handleaddress = () => {
-        dispatch(Address(user_id, address, pincode, city))
+        dispatch(Address(user_id, address, pincode, city, token))
         setedit_btn(false)
+    }
+    const [editaddressalert, seteditaddressalert] = useState(false)
+    const handleeditaddress = () => {
+        dispatch(Edit_address(user_id, street_address, ad_pincode, city_id, token))
+        setedit_btn(false)
+        seteditaddressalert(true)
     }
 
-    const handleeditaddress = () => {
-        dispatch(Edit_address(user_id, street_address, ad_pincode, city_id))
-        setedit_btn(false)
-    }
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setaddtocartalert(false)
+        setremovealert(false)
+        seteditaddressalert(false)
+    };
+
 
     return (
         <div>
@@ -210,15 +337,17 @@ export default function Checkout(props) {
                 {/* first div */}
                 <div className={classes.div1} style={{}}>
                     {/* 1 div */}
+                    {/* <CircularProgress variant="determinate" value={progress} /> */}
                     <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '848px', backgroundColor: '#fff', borderRadius: '2px' }}>
+                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '100%', backgroundColor: '#fff', borderRadius: '2px' }}>
                             <div style={{ padding: "16px 24px", minHeight: "72px", display: "flex", alignItems: "flex-start" }}>
                                 <h3 style={{ padding: "0", height: '48px', textTransform: 'uppercase', color: '#878787', fontSize: '16px', fontWeight: '500', borderRadius: '2px 2px 0 0' }}>
                                     <span style={{ fontSize: '12px', color: '#2874f0', backgroundColor: '#f0f0f0', borderRadius: '2px', padding: '3px 7px', verticalAlign: 'baseline', marginRight: '17px' }}>1</span>
                                 </h3>
                                 <div style={{ display: "inline-block" }}>
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
-                                        Login<CheckIcon style={{ marginLeft: '15px' }} />
+                                        Login
+                                        {/* <CheckIcon style={{ marginLeft: '15px' }} /> */}
                                     </div>
                                     <div style={{ fontSize: '14px', maxWidth: '630px' }}>
                                         <div>
@@ -230,7 +359,7 @@ export default function Checkout(props) {
                                     </div>
                                 </div>
 
-                                <Button onClick={() => setloginedit(true)} style={{
+                                {/* <Button onClick={() => setloginedit(true)} style={{
                                     padding: '0 32px',
                                     height: '40px',
                                     borderRadius: '2px',
@@ -242,7 +371,7 @@ export default function Checkout(props) {
                                     marginLeft: 'auto',
                                     cursor: 'pointer',
                                     textTransform: 'uppercase'
-                                }}>change</Button>
+                                }}>change</Button> */}
                             </div>
                         </div>
 
@@ -252,14 +381,15 @@ export default function Checkout(props) {
 
                     {/* 2 div */}
                     <div style={{ display: "flex", alignItems: "flex-start" }} >
-                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '848px', backgroundColor: '#fff', borderRadius: '2px' }}>
+                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '100%', backgroundColor: '#fff', borderRadius: '2px' }}>
                             <div style={{ padding: "16px 24px", minHeight: "72px", display: "flex", alignItems: "flex-start" }}>
                                 <h3 style={{ padding: "0", height: '48px', textTransform: 'uppercase', color: '#878787', fontSize: '16px', fontWeight: '500', borderRadius: '2px 2px 0 0' }}>
                                     <span style={{ fontSize: '12px', color: '#2874f0', backgroundColor: '#f0f0f0', borderRadius: '2px', padding: '3px 7px', verticalAlign: 'baseline', marginRight: '17px' }}>2</span>
                                 </h3>
                                 <div style={{ display: "inline-block" }}>
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
-                                        Delivery address<CheckIcon style={{ marginLeft: '15px' }} />
+                                        Delivery address
+                                        {/* <CheckIcon style={{ marginLeft: '15px' }} /> */}
                                     </div>
                                     {u_address != null ?
                                         <div style={{ display: edit_btn ? 'none' : 'block', fontSize: '14px', maxWidth: '630px' }}>
@@ -387,19 +517,9 @@ export default function Checkout(props) {
 
                                     }
                                 </div>
-                                <Button style={{
-                                    padding: '0 32px',
-                                    height: '40px',
-                                    borderRadius: '2px',
-                                    border: '1px solid #e0e0e0',
-                                    color: '#2874f0',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    background: '#fff',
-                                    marginLeft: 'auto',
-                                    cursor: 'pointer',
-                                    textTransform: 'uppercase',
-                                }} onClick={() => setedit_btn(true)}   >Edit</Button>
+                                {u_address &&
+                                    <Button Button className={classes.editbutton} style={{ display: edit_btn ? "none" : "block" }} onClick={() => setedit_btn(true)}   >Edit</Button>
+                                }
                             </div>
                         </div>
 
@@ -407,22 +527,23 @@ export default function Checkout(props) {
                     </div>
 
                     {/* 3 div */}
-                    <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '848px', backgroundColor: '#fff', borderRadius: '2px' }}>
-                            <div style={{ padding: "16px 24px", minHeight: "72px", display: "flex", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", width: '100%' }}>
+                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '100%', backgroundColor: '#fff', borderRadius: '2px' }}>
+                            <div style={{ width: "100%", padding: "16px 24px", minHeight: "72px", display: "flex", alignItems: "flex-start" }}>
                                 <h3 style={{ padding: "0", height: '48px', textTransform: 'uppercase', color: '#878787', fontSize: '16px', fontWeight: '500', borderRadius: '2px 2px 0 0' }}>
                                     <span style={{ fontSize: '12px', color: '#2874f0', backgroundColor: '#f0f0f0', borderRadius: '2px', padding: '3px 7px', verticalAlign: 'baseline', marginRight: '17px' }}>3</span>
                                 </h3>
-                                <div style={{ display: "inline-block" }}>
+                                <div className={classes.ordersummarydiv}  >
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
-                                        order summary<CheckIcon style={{ marginLeft: '15px' }} />
+                                        order summary
+                                        {/* <CheckIcon style={{ marginLeft: '15px' }} /> */}
                                     </div>
                                     {/* <div style={{ fontSize: '14px', maxWidth: '630px' }}>
                                         <div>
                                             <span style={{ marginLeft: '6px' }}>order summary</span>
                                         </div>
                                     </div> */}
-                                    <div style={{ display: "block", width: "100%" }}>
+                                    <div style={{ display: summarybtn ? 'block' : 'none', width: "100%" }}>
 
                                         {ca_data && ca_data.cart_data && ca_data.cart_data.length > 0 && ca_data.cart_data.map((c_data, i) => (
                                             <>
@@ -434,7 +555,7 @@ export default function Checkout(props) {
                                                             <div style={{ borderTop: '1px solid #f0f0f0!important', padding: '24px', position: 'relative', maxWidth: '950px' }}>
 
                                                                 <div className={classes.name} style={{}}>
-                                                                    <div style={{ height: '112px', width: '112px', position: 'relative', margin: '0 auto', }}>
+                                                                    <div className={classes.imagediv} style={{}}>
                                                                         <img style={{
                                                                             position: 'absolute',
                                                                             bottom: 0,
@@ -448,14 +569,7 @@ export default function Checkout(props) {
                                                                         />
                                                                     </div>
 
-                                                                    <div style={{
-                                                                        padding: '0 24px 12px',
-                                                                        verticalAlign: 'top',
-                                                                        minHeight: '112px',
-                                                                        flex: '1 1',
-                                                                        overflow: 'hidden',
-                                                                        maxWidth: '460px'
-                                                                    }}>
+                                                                    <div className={classes.nameandpricediv}>
 
                                                                         <div style={{ display: "block" }}>
                                                                             <Typography style={{ fontSize: '16px', color: '#212121', }} >{p_data.product_name}</Typography>
@@ -468,7 +582,7 @@ export default function Checkout(props) {
                                                                         </div>
                                                                     </div>
 
-                                                                    <div style={{ paddingLeft: "10px", display: 'block' }}>
+                                                                    {/* <div style={{ paddingLeft: "10px", display: 'block' }}>
                                                                         <div>
 
                                                                             <span style={{ fontSize: "14px", fontFamily: 'Roboto,Arial,sans-serif', color: '#212121' }} >Delivery in 2 days, Sat | Free</span>
@@ -478,7 +592,7 @@ export default function Checkout(props) {
                                                                             <Typography style={{ fontSize: '12px', color: '#878787' }} >7 Days Replacement Policy</Typography>
 
                                                                         </div>
-                                                                    </div>
+                                                                    </div> */}
 
 
 
@@ -567,42 +681,33 @@ export default function Checkout(props) {
 
                                     </div>
                                 </div>
-                                <Button style={{
-                                    padding: '0 32px',
-                                    height: '40px',
-                                    borderRadius: '2px',
-                                    border: '1px solid #e0e0e0',
-                                    color: '#2874f0',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    background: '#fff',
-                                    marginLeft: 'auto',
-                                    cursor: 'pointer',
-                                    textTransform: 'uppercase'
-                                }}>Edit</Button>
+                                <Button className={classes.hideandshowbtn} onClick={() => setsummarybtn(summarybtn => !summarybtn)}
+                                > {summarybtn ? "Hide" : "Show"} </Button>
                             </div>
                         </div>
                     </div>
 
                     {/* 4 div */}
-                    <div style={{ display: "flex", alignItems: "flex-start" }} >
-                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '848px', backgroundColor: '#fff', borderRadius: '2px' }}>
+
+                    <div style={{ display: u_address ? "flex" : 'none', alignItems: "flex-start" }} >
+                        <div style={{ marginBottom: '16px', position: 'relative', display: 'inline-block', boxShadow: '0 1px 1px 0 rgb(0 0 0 / 20%)', width: '100%', backgroundColor: '#fff', borderRadius: '2px' }}>
                             <div style={{ padding: "16px 24px", minHeight: "72px", display: "flex", alignItems: "flex-start" }}>
                                 <h3 style={{ padding: "0", height: '48px', textTransform: 'uppercase', color: '#878787', fontSize: '16px', fontWeight: '500', borderRadius: '2px 2px 0 0' }}>
                                     <span style={{ fontSize: '12px', color: '#2874f0', backgroundColor: '#f0f0f0', borderRadius: '2px', padding: '3px 7px', verticalAlign: 'baseline', marginRight: '17px' }}>4</span>
                                 </h3>
                                 <div style={{ display: "inline-block" }}>
                                     <div style={{ color: '#878787', fontSize: '16px', fontWeight: '500', marginBottom: '6px', textTransform: 'uppercase' }}>
-                                        payment options<CheckIcon style={{ marginLeft: '15px' }} />
+                                        payment
+                                        {/* <CheckIcon style={{ marginLeft: '15px' }} /> */}
                                     </div>
-                                    <div style={{ fontSize: '14px', maxWidth: '630px',marginTop:'30px' }}>
-                                        <div style={{width:'380px'}}>
+                                    <div style={{ fontSize: '14px', maxWidth: '630px', marginTop: '30px' }}>
+                                        <div className={classes.card} >
                                             <StripeContainer />
                                         </div>
                                     </div>
 
                                 </div>
-                                <Button style={{
+                                {/* <Button style={{
                                     padding: '0 32px',
                                     height: '40px',
                                     borderRadius: '2px',
@@ -614,14 +719,30 @@ export default function Checkout(props) {
                                     marginLeft: 'auto',
                                     cursor: 'pointer',
                                     textTransform: 'uppercase'
-                                }}>Edit</Button>
+                                }}>Edit</Button> */}
                             </div>
                         </div>
                     </div>
+
                 </div>
 
 
-
+                {/* alert section */}
+                <Snackbar open={addtocartalert} autoHideDuration={1000} onClose={handleClose} >
+                    <Alert onClose={handleClose} severity="info">
+                        quantity-update
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={removealert} autoHideDuration={2000} onClose={handleClose} >
+                    <Alert onClose={handleClose} severity="info">
+                        remove item from your cart
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={editaddressalert} autoHideDuration={2000} onClose={handleClose} >
+                    <Alert onClose={handleClose} severity="info">
+                        address updated
+                    </Alert>
+                </Snackbar>
 
 
 
@@ -675,7 +796,7 @@ export default function Checkout(props) {
                 </div>
 
             </div>
-        </div>
+        </div >
     )
 }
 

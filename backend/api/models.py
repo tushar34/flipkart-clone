@@ -40,17 +40,6 @@ class Sub_category(models.Model):
     def __str__(self):
         return str(self.sub_category_name)
 
-# class Specification(models.Model):
-#     specification = models.JSONField(null=True)
-    # def __str__(self):
-    #     return self.id
-
-# class Sub_category_specification(models.Model):
-#     sub_category_id = models.ForeignKey(Sub_category,on_delete=models.CASCADE)
-#     specification_id = models.ForeignKey(Specification,on_delete=models.CASCADE)
-    # def __str__(self):
-    #     return self.id
-
 
 class Product(models.Model):
     product_name = models.CharField(max_length=50)

@@ -10,10 +10,10 @@ import { Button, Divider } from '@material-ui/core';
 
 import { withStyles } from '@material-ui/core/styles';
 import Slide from '@material-ui/core/Slide';
-
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
-import { Getllproduct,Getspecificproduct } from '../store/actions/action';
+import { Getllproduct, Getspecificproduct,Get_product_by_sub_cat_id } from '../store/actions/action';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 // import { Carousel } from 'bootstrap';
 // import { AutoRotatingCarousel} from 'material-auto-rotating-carousel'
@@ -122,34 +122,22 @@ const useStyles = makeStyles((theme) => ({
             display: 'none',
         },
     },
-    pruductcategory: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: 'center',
-        boxShadow: "0 1px 1px 0px rgb(195 195 195)",
-        height: "80px",
-        width: "auto",
-        // border: "1px solid red",
-        [theme.breakpoints.down('sm')]: {
-            // display: 'block',
-            width: '500px',
-            height: 'auto'
-        },
-    },
-    innerproduct: {
-        display: "inline-flex",
-        // justifyContent:"space-between",
-        [theme.breakpoints.down('sm')]: {
-            display: 'block',
-            height: "auto"
-            // width: "500px"
-        },
-    },
+
     viewbtn: {
-        display: "inline-block",
-        float: "right",
-        [theme.breakpoints.down('sm')]: {
-            display: 'none',
+        display: "flex",
+
+        [theme.breakpoints.down('380')]: {
+            // justifyContent:"flex-"
+            // display: 'block',
+            // position: 'relative',
+            // left: '180px',
+        },
+    },
+    category_name: {
+        display: "flex",
+        [theme.breakpoints.down('380')]: {
+            // display: 'block',
+
         },
     },
     productbar: {
@@ -185,25 +173,94 @@ const useStyles = makeStyles((theme) => ({
         //     display: 'flex',
         //     flexFlow:"column"
         // },
+
+    },
+    imagecarousel: {
+        [theme.breakpoints.down(600)]: {
+            objectFit: 'contain'
+        },
+    },
+    pruductcategory: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: 'center',
+        boxShadow: "0 1px 1px 0px rgb(195 195 195)",
+        height: "auto",
+        width: "auto",
+        // border: "1px solid red",
+        // [theme.breakpoints.down('sm')]: {
+        //     // display: 'block',
+        //     width: '500px',
+        //     height: 'auto'
+        // },
+    },
+
+    innerproduct: {
+        // border: "1px solid red",
+        display: "flex",
+        flexWrap: 'wrap',
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        // justifyContent:"space-between",
+        [theme.breakpoints.down('sm')]: {
+            // display: 'block',
+            // height: "auto",
+            // width: "50%"
+            // height:"auto"
+        },
+    },
+    innerproductdetail: {
+        display: "flex",
+        flexFlow: 'column',
+        justifyContent: "center",
+        alignItems: "center",
+        // height: "75px",
+        // width: "11.11%"
+        // width:"100%"
+        width: "100px",
+
     }
 }));
 
 export default function Home(props) {
+    console.log(props)
 
     const classes = useStyles();
     const dispatch = useDispatch()
 
     useEffect(() => {
         dispatch(Getllproduct())
-    }, [])
+        fetchphonedata()
+    }, [0])
 
+    const [phone_data, setphone_data] = useState()
+
+    const fetchphonedata = () => {
+        axios.get("http://127.0.0.1:8000/api/mobile-data/", {
+        })
+            .then(res => {
+                setphone_data(res)
+            })
+            .catch(err => {
+            })
+
+    }
+    console.log(phone_data);
+    // console.log(phone_data && phone_data.data && phone_data.data.data && phone_data.data.sub_category_id);
+    // const p_data=phone_data
+    // console.log(phone_data)
     // redux data
     const product_data = useSelector(state => state.GetallproductReducer.product_data)
     console.log(product_data)
 
     const handleclickonproduct = (id) => {
         // alert(id)
-        dispatch(Getspecificproduct(id,props))
+        dispatch(Getspecificproduct(id, props))
+    }
+
+    const handleviewall = (id) => {
+        dispatch(Get_product_by_sub_cat_id(id,props))
     }
     return (
         <div className={classes.grow}>
@@ -212,109 +269,99 @@ export default function Home(props) {
                 <div className={classes.pruductcategory} >
                     <div className={classes.innerproduct} style={{}}>
 
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/f15c02bfeb02d15d.png?q=100" />
-                                </div>
-
-                                <div style={{ display: "block" }}>
-                                    <Typography>Top Offers</Typography>
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="	https://rukminim1.flixcart.com/flap/128/128/image/29327f40e9c4d26b.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Grocery</Typography>
-                                </div>
+                        <div className={classes.innerproductdetail}   >
+                            {/* <div style={{ display: "flex" }}> */}
+                            <div>
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/f15c02bfeb02d15d.png?q=100" />
                             </div>
 
+                            <div>
+                                <Typography>Top Offers</Typography>
+                            </div>
+                            {/* </div> */}
                         </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="	https://rukminim1.flixcart.com/flap/128/128/image/22fddf3c7da4c4f4.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Mobiles</Typography>
-                                </div>
+                        <div className={classes.innerproductdetail} >
+
+                            <div >
+                                <img height="50px" src="	https://rukminim1.flixcart.com/flap/128/128/image/29327f40e9c4d26b.png?q=100" />
+                            </div>
+                            <div >
+                                <Typography>Grocery</Typography>
                             </div>
 
-                        </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
 
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/82b3ca5fb2301045.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Fashion</Typography>
-                                </div>
+                        </div>
+                        <div className={classes.innerproductdetail}>
+
+                            <div >
+                                <img height="50px" src="	https://rukminim1.flixcart.com/flap/128/128/image/22fddf3c7da4c4f4.png?q=100" />
+                            </div>
+                            <div >
+                                <Typography>Mobiles</Typography>
                             </div>
 
-                        </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
 
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/69c6589653afdb9a.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Electronics</Typography>
-                                </div>
+                        </div>
+                        <div className={classes.innerproductdetail}>
+
+
+                            <div >
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/82b3ca5fb2301045.png?q=100" />
+                            </div>
+                            <div >
+                                <Typography>Fashion</Typography>
+                            </div>
+
+
+                        </div>
+                        <div className={classes.innerproductdetail}>
+
+                            <div>
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/69c6589653afdb9a.png?q=100" />
+                            </div>
+                            <div >
+                                <Typography>Electronics</Typography>
                             </div>
 
                         </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/ab7e2b022a4587dd.jpg?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Home</Typography>
-                                </div>
+                        <div className={classes.innerproductdetail}>
+                            <div >
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/ab7e2b022a4587dd.jpg?q=100" />
                             </div>
+                            <div >
+                                <Typography>Home</Typography>
+                            </div>
+                        </div>
+                        <div className={classes.innerproductdetail}>
+
+                            <div>
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/0ff199d1bd27eb98.png?q=100" />
+                            </div>
+                            <div>
+                                <Typography>Appliances</Typography>
+                            </div>
+
 
                         </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/0ff199d1bd27eb98.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Appliances</Typography>
-                                </div>
+                        <div className={classes.innerproductdetail}>
+
+
+                            <div>
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/71050627a56b4693.png?q=100" />
                             </div>
+                            <div>
+                                <Typography>Travel</Typography>
+                            </div>
+
 
                         </div>
-                        <div style={{ display: "inline-flex", height: "75px", width: "100px" }}>
-                            <div style={{ display: "block" }}>
-
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/71050627a56b4693.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Travel</Typography>
-                                </div>
+                        <div className={classes.innerproductdetail}>
+                            <div>
+                                <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/dff3f7adcf3a90c6.png?q=100" />
                             </div>
-
-                        </div>
-                        <div style={{ display: "inline-flex", }}>
-                            <div style={{ display: "block" }}>
-
-                                <div style={{ display: "block" }}>
-                                    <img height="50px" src="https://rukminim1.flixcart.com/flap/128/128/image/dff3f7adcf3a90c6.png?q=100" />
-                                </div>
-                                <div style={{ display: "block" }}>
-                                    <Typography>Toys</Typography>
-                                </div>
+                            <div>
+                                <Typography>Toys</Typography>
                             </div>
-
                         </div>
 
                     </div>
@@ -322,16 +369,16 @@ export default function Home(props) {
             </div>
             <div>
                 <Carousel infiniteLoop="true" showStatus={false} showIndicators={false} showThumbs={false} axis="horizontal" autoPlay="true"   >
-                    <di >
-                        <img height="200px" src="https://rukminim1.flixcart.com/flap/3376/560/image/1513fc32a7162528.jpg?q=50" />
-
-                    </di>
-                    <div>
-                        <img height="200px" src="https://rukminim1.flixcart.com/flap/1688/280/image/62c50931b6126fbd.jpg?q=50" />
+                    <div >
+                        <img className={classes.imagecarousel} height="200px" src="https://rukminim1.flixcart.com/flap/3376/560/image/1513fc32a7162528.jpg?q=50" />
 
                     </div>
                     <div>
-                        <img height="200px" src="https://rukminim1.flixcart.com/flap/3376/560/image/f5e814ee6e1aa1ba.jpg?q=50" />
+                        <img className={classes.imagecarousel} height="200px" src="https://rukminim1.flixcart.com/flap/1688/280/image/62c50931b6126fbd.jpg?q=50" />
+
+                    </div>
+                    <div>
+                        <img className={classes.imagecarousel} height="200px" src="https://rukminim1.flixcart.com/flap/3376/560/image/f5e814ee6e1aa1ba.jpg?q=50" />
 
                     </div>
                 </Carousel>
@@ -342,7 +389,7 @@ export default function Home(props) {
             <div style={{ margin: '20px 20px 0 20px', height: "auto", boxShadow: "rgb(165 160 160) 0px 2px 4px 0px" }}>
                 <div>
                     <div style={{ display: "inline-block", marginLeft: "10px" }}>
-                        <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold' }}>Headphones & Speakers</Typography>
+                        <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold' }}>Mobiles</Typography>
                     </div>
                     <div style={{ display: "inline-block", float: "right" }}>
                         <Button style={{ backgroundColor: "#2874f0", color: "white" }} variant="contained">View all</Button>
@@ -513,38 +560,52 @@ export default function Home(props) {
 
 
 
-            <div style={{ margin: '20px 20px 0 20px', height: "auto", boxShadow: "rgb(165 160 160) 0px 2px 4px 0px" }}>
-                <div>
-                    <div style={{ display: "inline-block", marginLeft: "10px" }}>
-                        <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold' }}>Headphones & Speakers</Typography>
-                    </div>
-                    <div className={classes.viewbtn} style={{}}>
-                        <Button style={{ backgroundColor: "#2874f0", color: "white" }} variant="contained">View all</Button>
-                    </div>
-                </div>
+            {phone_data &&
+                <div style={{ margin: '20px 20px 0 20px', height: "auto", boxShadow: "rgb(165 160 160) 0px 2px 4px 0px" }}>
 
 
-                <Divider style={{ backgroundColor: "black" }} />
-                <d iv className={classes.productbar}   >
-
-                    {/* style={{ display: "flex" }} */}
-                    {/* <Link to="/productdetail"> */}
-                    {product_data && product_data.data && product_data.data.length > 0 && product_data.data.slice(0, 8).map((data, i) => (
-                        // <div style={{display:"flex" , flexWrap:'wrap',flexFlow:"row",justifyContent:"space-around"}}>
-                        <div className={classes.productdiv} key={i} style={{}}>
-                            <div onClick={()=>handleclickonproduct(data.id)} style={{ cursor: "pointer", display: "flex", alignItems: 'center', justifyContent: 'center', height: "185px" }}>
-                                <img src={data.product_image} height="auto" width="auto" />
-                            </div>
-                            <div style={{ display: "block", textAlign: "center", fontSize: '14px', fontWeight: '500', marginTop: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {/* <Typography variant="subtitle2" gutterBottom style={{ fontWeight: 'bold' }}>Headphones</Typography> */}
-                                {data.product_name}
-                            </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: "space-between" }}>
+                        <div className={classes.category_name}>
+                            <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold' }}>Best Selling Phone</Typography>
                         </div>
-                        // </div>
-                    ))}
-                    {/* </Link> */}
-                </d>
-            </div>
-        </div>
+                        <div className={classes.viewbtn} style={{}}>
+
+                        {/* component={Link} to='/productlist' */}
+                        {/* {phone_data && phone_data.data && phone_data.data.data  && phone_data.data.data.sub_category_id && */}
+                            <Button   onClick={()=>handleviewall(phone_data && phone_data.data && phone_data.data.data && phone_data.data.sub_category_id)}   style={{ backgroundColor: "#2874f0", color: "white" }} variant="contained">View all</Button>
+                            {/* } */}
+                        </div>
+                    </div>
+
+
+                    <Divider style={{ backgroundColor: "black" }} />
+
+                    <div className={classes.productbar}   >
+
+                        {/* style={{ display: "flex" }} */}
+                        {/* <Link to="/productdetail"> */}
+                        {phone_data && phone_data.data && phone_data.data.data && phone_data.data.data.length > 0 && phone_data.data.data.slice(0, 8).map((data, i) => (
+                            // <div style={{display:"flex" , flexWrap:'wrap',flexFlow:"row",justifyContent:"space-around"}}>
+                            <div className={classes.productdiv} key={i} style={{}}>
+                                <div onClick={() => handleclickonproduct(data.id)} style={{ cursor: "pointer", display: "flex", alignItems: 'center', justifyContent: 'center', height: "185px" }}>
+                                    <img src={data.product_image} height="auto" width="auto" />
+                                </div>
+                                <div style={{ display: "block", textAlign: "center", fontSize: '14px', fontWeight: '500', marginTop: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {/* <Typography variant="subtitle2" gutterBottom style={{ fontWeight: 'bold' }}>Headphones</Typography> */}
+                                    {data.product_name}
+                                </div>
+                            </div>
+                            // </div>
+                        ))}
+                        {/* </Link> */}
+                    </div>
+
+                </div>
+            }
+
+
+
+
+        </div >
     );
 }

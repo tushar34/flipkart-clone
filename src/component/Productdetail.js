@@ -12,6 +12,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { AddtoCart, Usercartlist } from '../store/actions/action';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
+import { useHistory } from 'react-router';
 import clsx from 'clsx';
 // import 
 import { Link } from 'react-router-dom';
@@ -107,17 +108,18 @@ const useStyles = makeStyles((theme) => ({
         alignItems: "center",
         justifyContent: "center",
         marginTop: "10px",
-        // [theme.breakpoints.down('sm')]: {
-        //     display: "block",
-        // },
+        [theme.breakpoints.down('sm')]: {
+            display: "flex",
+        },
     },
     btn: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         marginTop: "10px",
-        [theme.breakpoints.down('sm')]: {
-            display: "block",
+        [theme.breakpoints.down('600')]: {
+            // display: "block",
+            flexFlow: "column"
         },
     },
     cartbtn: {
@@ -127,6 +129,22 @@ const useStyles = makeStyles((theme) => ({
         },
 
 
+    },
+    btngroup1: {
+        backgroundColor: "#ff9f00",
+        marginRight: "10px",
+        [theme.breakpoints.down('600')]: {
+            // display: "block",
+            marginRight: "0"
+        },
+    },
+    btngroup2: {
+        backgroundColor: "#fb641b",
+        marginRight: "10px",
+        [theme.breakpoints.down('600')]: {
+            // display: "block",
+            marginRight: "0"
+        },
     }
 
 }));
@@ -136,11 +154,17 @@ function Alert(props) {
 }
 
 export default function Productdetail(props) {
-
+    const history = useHistory()
+    const ca_data = useSelector(state => state.UsercartlistReducer?.data?.data)
+    console.log(ca_data)
+    useEffect(() => {
+        console.log(ca_data)
+    }, [ca_data])
+    const token = useSelector(state => state.LoginReducer.token)
     const msg = useSelector(state => state.AddtocartReducer?.data?.data?.msg);
     const [snackbaropen1, setsnackbaropen1] = useState(false)
     const [snackbaropen2, setsnackbaropen2] = useState(false)
-    // const [m, setm] = useState(null);
+
 
     const handlesnackbarClose1 = (event, reason) => {
         if (reason === 'clickaway') {
@@ -153,6 +177,7 @@ export default function Productdetail(props) {
             return;
         }
         setsnackbaropen2(false);
+        setloginalert(false)
     }
 
     const user_id = useSelector(state => state.LoginReducer.id)
@@ -160,13 +185,14 @@ export default function Productdetail(props) {
 
 
     useEffect(() => {
-        dispatch(Usercartlist(user_id));
+        dispatch(Usercartlist(user_id, token));
     }, [0])
 
     const classes = useStyles();
     const [expanded, setexpanded] = useState(false)
     const product_data = useSelector(state => state.GetspecificproductReducer.data.data)
     const id = product_data[0]['id']
+    console.log(id)
     const image_url = product_data[0]['product_image']
     const image_product_url = product_data[0]['product_detail_image']
 
@@ -178,54 +204,62 @@ export default function Productdetail(props) {
 
     const key = Object.keys(specification).map(keydata => keydata)
     const value = Object.values(specification).map(keydata => keydata)
-
-
-    // const [showmsg, setshowmsg] = useState(false)
-    const ca_data = useSelector(state => state.UsercartlistReducer?.data?.data?.cart_data)
-
-
-    const saveMessage = () => {
-        // setMsg(useSelector(state=>state.AddtocartReducer.data.data.msg));
-        // if (msg == "update cart successfully") {
-        //     setsnackbaropen2(true)
-        // }
-        // else {
-        //     setsnackbaropen1(true)
-        // }
-
-        console.log("4564654")
-    }
+    const [loginalert, setloginalert] = useState(false)
     const handleaddtocart = () => {
-        dispatch(AddtoCart(id, user_id, props))
 
-        // if (msg == "update cart successfully") {
-        //     setsnackbaropen2(true)
-        // }
-        // else {
-        //     setsnackbaropen1(true)
-        // }
-        // handlemsg()
+        if (token) {
+            if (ca_data?.cart_data?.length > 0) {
+                const le = ca_data.cart_data.length
+                // console.log(le)
+                const find_data = ca_data.cart_data.filter(d => d.product_id == id)
+                // console.log(find_data)
+                // console.log(id)
+                if (find_data.length != 0) {
+                    setsnackbaropen2(true)
+                }
+                else {
+                    setsnackbaropen1(true)
+                }
+            }
+            else {
+                setsnackbaropen1(true)
+            }
+            dispatch(AddtoCart(id, user_id, token, props))
+        }
+        else {
+            setloginalert(true)
+        }
+    }
+    const handlebuynow = () => {
+        if (token) {
+            if (ca_data?.cart_data?.length > 0) {
+                const le = ca_data.cart_data.length
+                // console.log(le)
+                const find_data = ca_data.cart_data.filter(d => d.product_id == id)
+                // console.log(find_data)
+                // console.log(id)
+                if (find_data.length != 0) {
+                    setsnackbaropen2(true)
+                }
+                else {
+                    setsnackbaropen1(true)
+                }
+                // dispatch(AddtoCart(id, user_id, token, props))
+                // history.push('/checkout')
+            }
+            else {
+                setsnackbaropen1(true)
+
+            }
+            dispatch(AddtoCart(id, user_id, token, props))
+            history.push('/checkout')
+
+        }
+        else {
+            setloginalert(true)
+        }
 
     }
-    const [showmsg, setshowmsg] = useState(false)
-    useEffect(() => {
-        console.log(msg)
-        setshowmsg(true)
-        console.log(showmsg)
-        // if (showmsg & msg == "Add in cart successfully") {
-        //     setsnackbaropen1(true)
-        // }
-        // else {
-        //     setsnackbaropen2(true)
-        // }
-    }, [handleaddtocart])
-    // if (showmsg & msg == "Add in cart successfully") {
-    //     setsnackbaropen1(true)
-    // }
-    // else {
-    //     setsnackbaropen2(true)
-    // }
-
 
     return (
         <div className={classes.maindiv} style={{}}>
@@ -257,10 +291,17 @@ export default function Productdetail(props) {
 
                     <div className={classes.btn} style={{}}>
                         <div className={classes.cartbtn} style={{}}>
-                            <Button onClick={handleaddtocart} style={{ backgroundColor: "#ff9f00", marginRight: "10px" }} variant="contained"><ShoppingCartIcon /> <Typography style={{ marginLeft: "5px" }}>ADD TO CART</Typography> </Button>
+                            <Button className={classes.btngroup1} onClick={handleaddtocart} variant="contained">
+                                <ShoppingCartIcon />
+                                <Typography style={{ marginLeft: "5px" }}>ADD TO CART</Typography>
+                            </Button>
                         </div>
-                        <div style={{ display: "inline-flex" }}>
-                            <Button style={{ backgroundColor: "#fb641b", marginRight: "10px" }} variant="contained"><FlashOnIcon />BUY NOW</Button>
+                        <div className={classes.cartbtn}  >
+                            {/* style={{ display: "inline-flex" }} */}
+                            <Button className={classes.btngroup2} onClick={handlebuynow} variant="contained">
+                                <FlashOnIcon />
+                                <Typography style={{ marginLeft: "5px" }}>BUY NOW</Typography>
+                            </Button>
                         </div>
                     </div>
                     {/* open={snackbaropen1} */}
@@ -269,10 +310,18 @@ export default function Productdetail(props) {
                             add to cart
                         </Alert>
                     </Snackbar>
+
                     {/* open={snackbaropen2} */}
                     <Snackbar open={snackbaropen2} autoHideDuration={3000} onClose={handlesnackbarClose2}>
                         <Alert onClose={handlesnackbarClose2} severity="success">
                             update quantity
+                        </Alert>
+                    </Snackbar>
+
+
+                    <Snackbar open={loginalert} autoHideDuration={3000} onClose={handlesnackbarClose2}>
+                        <Alert onClose={handlesnackbarClose2} severity="info">
+                            you are not valid user. please sign-up or sign-in.
                         </Alert>
                     </Snackbar>
 
@@ -351,50 +400,19 @@ export default function Productdetail(props) {
                             </div>
 
                             <div style={{ display: "flex" }}>
-                                <table>
+                                <table width='100%'>
                                     <tbody>
 
-                                        {/* <tr >
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>In The Box</td>
-                                            <td>iPhone, USB-C to Lightning Cable, Documentation</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>Model-Number</td>
-                                            <td>MGDG3HN/A</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>Model-Name</td>
-                                            <td>iPhone 12 Pro Max</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>Color</td>
-                                            <td>Graphite</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>Browse Type</td>
-                                            <td>Smartphones</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>SIM Type</td>
-                                            <td>Dual Sim</td>
-                                        </tr>
-                                         */}
-                                        {/* {key.map((keydata, i) => (
-                                            <> */}
+
                                         {value.map((valuedata, i) => (
                                             <tr key={i}>
-                                                <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>{key[i]}</td>
+                                                <td style={{ color: '#878787', width: "50%", paddingRight: '10px', paddingLeft: "5px" }}>{key[i]}</td>
                                                 <td>{valuedata}</td>
                                             </tr>
                                         ))}
-                                        {/* </>
-                                        ))} */}
-                                        {/* <tr>
-                                            <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>{key[0]}</td>
-                                            <td>{value[0]}</td>
-                                        </tr> */}
 
-                                        <Collapse in={expanded} timeout="auto" unmountOnExit>
+
+                                        {/* <Collapse in={expanded} timeout="auto" unmountOnExit>
 
                                             <tr>
                                                 <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>SIM Type</td>
@@ -404,9 +422,9 @@ export default function Productdetail(props) {
                                                 <td style={{ color: '#878787', width: "35%", paddingRight: '90px', paddingLeft: "5px" }}>Hybrid Sim Slot</td>
                                                 <td>No</td>
                                             </tr>
-                                        </Collapse>
+                                        </Collapse> */}
                                     </tbody>
-                                    <IconButton
+                                    {/* <IconButton
                                         className={clsx(classes.expand, {
                                             [classes.expandOpen]: expanded,
                                         })}
@@ -415,7 +433,7 @@ export default function Productdetail(props) {
                                         aria-label="show more"
                                     >
                                         <ExpandMoreIcon />
-                                    </IconButton>
+                                    </IconButton> */}
                                     {/* <Button onClick={() => setexpanded(!expanded)} style={{ color: "blue" }}>Read more</Button> */}
                                 </table>
                             </div>

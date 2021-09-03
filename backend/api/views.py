@@ -1,3 +1,6 @@
+
+import re
+from django.core.exceptions import ValidationError
 import stripe
 from django.conf import settings
 from cities_light.models import City
@@ -14,6 +17,11 @@ from .serializer import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.contrib import messages
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.core.validators import validate_email
+from twilio.rest import Client
+
 
 User = get_user_model()
 
@@ -59,6 +67,49 @@ class RegisterView(APIView):
         password = request.data['password']
         confirm_password = request.data['confirm_password']
 
+        if user_name == '' or email == '' or phone_number == '' or password == '' or confirm_password == '':
+            error = {
+                "error": "please enter valid data"
+            }
+            return Response(status=HTTP_400_BAD_REQUEST, data=error)
+
+        # val_email = validate_email(email)
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            error = {
+                "error": "please enter valid email"
+            }
+            return Response(status=HTTP_400_BAD_REQUEST, data=error)
+
+        # Pattern = re.compile("(0|91)?[7-9][0-9]{9}")
+        Pattern = re.compile('^[2-9]{2}[0-9]{8}$')
+        if Pattern.match(phone_number):
+            # return Response(status=HTTP_400_BAD_REQUEST, data=error)
+            print("okkkkk")
+        else:
+            error = {
+                "error": "phone number not valid"
+            }
+            return Response(status=HTTP_400_BAD_REQUEST, data=error)
+
+        if password != confirm_password:
+            error = {
+                "error": "password not match"
+            }
+            return Response(status=HTTP_400_BAD_REQUEST, data=error)
+            # message = "password not match"
+            # return JsonResponse({'message':message}, status=HTTP_400_BAD_REQUEST)
+
+        # valid_phone=re = "^[2-9]{2}[0-9]{8}$"
+        # if phone_number.match(valid_phone):
+        #     print("yes")
+        # else:
+        #     error = {
+        #         "error": "please enter valid phone"
+        #     }
+        #     return Response(status=HTTP_400_BAD_REQUEST, data=error)
+
         user_data = User.objects.filter(phone_number=phone_number)
         if user_data:
             error = {
@@ -68,7 +119,7 @@ class RegisterView(APIView):
         else:
             user = User(username=user_name, password=password,
                         phone_number=phone_number, email=email)
-            print(user)
+            # print(user)
             user.save()
             refresh = RefreshToken.for_user(user)
             msg = {
@@ -124,6 +175,9 @@ class ProductView(APIView):
 
 
 class AddtocartView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         user_id = request.data['user_id']
         product_id = request.data['product_id']
@@ -131,7 +185,8 @@ class AddtocartView(APIView):
         u_id = User.objects.get(id=user_id)
         p_id = Product.objects.get(id=product_id)
 
-        check_data = CartItem.objects.filter(user=u_id, product=p_id).values()
+        check_data = CartItem.objects.filter(
+            user=u_id, product=p_id, ordered=False).values()
 
         product_data = Product.objects.filter(id=product_id).values()
         product_price = int(product_data[0]['product_price'])
@@ -191,6 +246,9 @@ class AddtocartView(APIView):
 
 
 class RemovetocartView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user_id = request.data['user_id']
         product_id = request.data['product_id']
@@ -231,10 +289,13 @@ class RemovetocartView(APIView):
 
 
 class UsercartlistView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user_id = request.data['user_id']
         u_id = User.objects.get(id=user_id)
-        cart_data = CartItem.objects.filter(user=u_id).values()
+        cart_data = CartItem.objects.filter(user=u_id, ordered=False).values()
         list_of_cart = list(cart_data)
         total_cart_price = 0
         for data in range(len(list_of_cart)):
@@ -258,6 +319,9 @@ class GetuserView(APIView):
 
 
 class DeletecartitemView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user_id = request.data['user_id']
         cart_product_id = request.data['cart_product_id']
@@ -289,6 +353,9 @@ class CityView(APIView):
 
 
 class AddressView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user_id = request.data['user_id']
         address = request.data['Address']
@@ -343,7 +410,7 @@ class AddressView(APIView):
 class PaymentView(APIView):
     def post(self, request):
         id = request.data['id']
-        amount = request.data['amount'] 
+        amount = request.data['amount']
         user = request.data['user']
         u_id = User.objects.get(id=user)
         try:
@@ -362,6 +429,16 @@ class PaymentView(APIView):
             payment.amount = amount
             payment.save()
 
+            cartitem = CartItem.objects.filter(
+                user=u_id, ordered=False).values()
+            c_item = list(cartitem)
+            # print(cartitem)
+            print(c_item)
+            for item in range(len(c_item)):
+                # c_item[item]['ordered'] = True
+                ordered = c_item[item]['ordered'] = True
+                cartitem.update(ordered=True)
+
             # assign the payment to the order
 
             # order_item = order.items.all()
@@ -376,7 +453,20 @@ class PaymentView(APIView):
 
             # messages.success(self.request, "Your order was successful!")
             # return redirect("/")
-            return Response(status=HTTP_200_OK)
+
+            account_sid = 'AC77211d7c0da4687ecee9d3ca46e752a8' 
+            auth_token = 'b83adbb7850d78d7c491e57cae9b254c'
+            client = Client(account_sid, auth_token)
+            message = client.messages.create(
+                              messaging_service_sid='MG533b1237821f73c88991d02a4b507f1f', 
+                              from_='(310) 870-1082',
+                              body='payment done. your product item has been  deliver soon',
+                              to='+919727599219',
+                          )  
+            data = {
+                "msg": "payment successfully"
+            }
+            return Response(status=HTTP_200_OK, data=data)
 
         except stripe.error.CardError as e:
             body = e.json_body
@@ -425,3 +515,58 @@ class PaymentView(APIView):
         #     'user':user,
         # }
         # return Response(status=HTTP_200_OK, data=data)
+
+
+class Fetchproductofmobile(APIView):
+    def get(self, request):
+        sub_category_name = Sub_category.objects.filter(
+            sub_category_name="phone").values()
+        sub_category_id = sub_category_name[0]['id']
+        # print(category_name)
+        # print(category_id)
+        product_data = Product.objects.filter(
+            product_subcategory=sub_category_id).values()
+        # print(prooduct_data)
+        data = list(product_data)
+
+        for ddata in range(len(data)):
+            # print(data[ddata])
+            if(data[ddata]['product_image'] == ''):
+                data[ddata]['product_image'] = None
+            else:
+                # print(data[ddata]['image'])
+                image_url = 'http://127.0.0.1:8000/media/' + \
+                    (data[ddata]['product_image'])
+                data[ddata]['product_image'] = image_url
+        data = {
+            "msg": "get mobile data successfully",
+            "data": data,
+            "sub_category_id": sub_category_id
+        }
+        return Response(status=HTTP_200_OK, data=data)
+
+
+class Fetchproduct_by_sub_category_id(APIView):
+    def post(self, request):
+        sub_category_id = request.data['id']
+        # get_category_id = Sub_category.objects.filter(id=sub_category_id).values()
+        # print(get_category_id)
+        get_data = Product.objects.filter(product_subcategory=sub_category_id).values()
+        # print(get_data)
+        data = list(get_data)
+
+        for ddata in range(len(data)):
+            # print(data[ddata])
+            if(data[ddata]['product_image'] == ''):
+                data[ddata]['product_image'] = None
+            else:
+                # print(data[ddata]['image'])
+                image_url = 'http://127.0.0.1:8000/media/' + \
+                    (data[ddata]['product_image'])
+                data[ddata]['product_image'] = image_url
+        data = {
+            "msg": "get data successfully",
+            "data":data
+
+        }
+        return Response(status=HTTP_200_OK, data=data)

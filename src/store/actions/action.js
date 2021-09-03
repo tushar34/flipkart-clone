@@ -1,5 +1,5 @@
 import axios from "axios";
-import {EDITADDRESSSUCCESS,EDITADDRESSFAILL, GETADDRESSSUCCESS,GETADDRESSFAILL,CITYSUCCESS, CITYFAILL, DELETECARTITEMSUCCESS, DELETECARTITEMFAILL, CARTLISTSUCCESS, CARTLISTFAILL, REMOVETOCARTSUCCESS, REMOVETOCARTFAILL, ADDTOCARTFAILL, ADDTOCARTSUCCESS, LOGINSUCCESS, LOGINFAILL, GETSPECIFICPRODUCTSUCCESS, GETSPECIFICPRODUCTFAILL, REGISTERFAILL, REGISTERSUCCESS, LOGOUTFAILL, LOGOUTSUCCESS, GETPRODUCTSUCCESS, GETPRODUCTFAILL } from "../actiontype"
+import {GETDATAOFSUBCATEGORYSUCCESS,GETDATAOFSUBCATEGORYFAIL, EDITADDRESSSUCCESS, EDITADDRESSFAILL, GETADDRESSSUCCESS, GETADDRESSFAILL, CITYSUCCESS, CITYFAILL, DELETECARTITEMSUCCESS, DELETECARTITEMFAILL, CARTLISTSUCCESS, CARTLISTFAILL, REMOVETOCARTSUCCESS, REMOVETOCARTFAILL, ADDTOCARTFAILL, ADDTOCARTSUCCESS, LOGINSUCCESS, LOGINFAILL, GETSPECIFICPRODUCTSUCCESS, GETSPECIFICPRODUCTFAILL, REGISTERFAILL, REGISTERSUCCESS, LOGOUTFAILL, LOGOUTSUCCESS, GETPRODUCTSUCCESS, GETPRODUCTFAILL } from "../actiontype"
 
 
 
@@ -36,12 +36,12 @@ export const Login = (phone, password, props) => {
                 const user_address = res.data.user_address;
                 localStorage.setItem("token", token);
                 dispatch(loginsuccess(token, user_id, phone_number, user_name, user_address));
-                dispatch(Usercartlist(user_id))
-                dispatch(Get_address(user_id))
+                dispatch(Usercartlist(user_id, token))
+                dispatch(Get_address(user_id, token))
                 // props.history.push('/');
             })
             .catch(err => {
-                // console.log(err);
+                console.log(err);
                 dispatch(loginfaill(err));
             })
     }
@@ -65,6 +65,8 @@ export const Register = (phone_number2, password2, email, username, confirmpassw
                 // dispatch(registersuccess)
             })
             .catch(err => {
+                console.log(err);
+                console.log(err.message);
                 dispatch(loginfaill(err));
             })
     }
@@ -138,12 +140,15 @@ export const Getspecificproduct = (id, props) => {
 
 
 
-export const AddtoCart = (id, user_id, props) => {
+export const AddtoCart = (id, user_id, token, props) => {
+    // console.log(token)
+    const data = {
+        user_id: user_id,
+        product_id: id
+    }
     return dispatch => {
-
-        axios.post("http://127.0.0.1:8000/api/addtocart/", {
-            user_id: user_id,
-            product_id: id
+        axios.post("http://127.0.0.1:8000/api/addtocart/", data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -151,7 +156,7 @@ export const AddtoCart = (id, user_id, props) => {
                     type: ADDTOCARTSUCCESS,
                     data: res
                 })
-                dispatch(Usercartlist(user_id))
+                dispatch(Usercartlist(user_id, token))
                 // props.history.push('/productdetail')
             })
             .catch(err => {
@@ -164,11 +169,15 @@ export const AddtoCart = (id, user_id, props) => {
 }
 
 
-export const RemovetoCart = (id, user_id, props) => {
+export const RemovetoCart = (id, user_id, token, props) => {
+    const data = {
+        user_id: user_id,
+        product_id: id
+    }
+
     return dispatch => {
-        axios.post("http://127.0.0.1:8000/api/removetocart/", {
-            user_id: user_id,
-            product_id: id
+        axios.post("http://127.0.0.1:8000/api/removetocart/", data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -176,7 +185,7 @@ export const RemovetoCart = (id, user_id, props) => {
                     type: REMOVETOCARTSUCCESS,
                     data: res
                 })
-                dispatch(Usercartlist(user_id))
+                dispatch(Usercartlist(user_id, token))
                 // props.history.push('/addtocart')
             })
             .catch(err => {
@@ -189,10 +198,13 @@ export const RemovetoCart = (id, user_id, props) => {
 }
 
 
-export const Usercartlist = (user_id, props) => {
+export const Usercartlist = (user_id, token, props) => {
+    const data = {
+        user_id: user_id
+    }
     return dispatch => {
-        axios.post("http://127.0.0.1:8000/api/usercartlist/", {
-            user_id: user_id
+        axios.post("http://127.0.0.1:8000/api/usercartlist/", data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -214,11 +226,14 @@ export const Usercartlist = (user_id, props) => {
 
 
 
-export const Deletecartitem = (user_id, c_id, props) => {
+export const Deletecartitem = (user_id, c_id, token, props) => {
+    const data = {
+        user_id: user_id,
+        cart_product_id: c_id
+    }
     return dispatch => {
-        axios.post("http://127.0.0.1:8000/api/deletecartitem/", {
-            user_id: user_id,
-            cart_product_id: c_id
+        axios.post("http://127.0.0.1:8000/api/deletecartitem/", data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -226,7 +241,7 @@ export const Deletecartitem = (user_id, c_id, props) => {
                     type: DELETECARTITEMSUCCESS,
                     data: res
                 })
-                dispatch(Usercartlist(user_id, props))
+                dispatch(Usercartlist(user_id, token, props))
                 // props.history.push('/addtocart')
             })
             .catch(err => {
@@ -261,17 +276,20 @@ export const City = () => {
 }
 
 
-export const Address = (user_id, address, pincode, country_id) => {
+export const Address = (user_id, address, pincode, country_id, token) => {
+    const data = {
+        user_id: user_id,
+        Address: address,
+        pincode: pincode,
+        country_id: country_id,
+    }
     return dispatch => {
-        axios.post("http://127.0.0.1:8000/api/address/", {
-            user_id:user_id,
-            Address:address,
-            pincode:pincode,
-            country_id:country_id,
+        axios.post("http://127.0.0.1:8000/api/address/", data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
-                dispatch(Get_address(user_id))
+                dispatch(Get_address(user_id, token))
             })
             .catch(err => {
                 // dispatch({
@@ -283,9 +301,10 @@ export const Address = (user_id, address, pincode, country_id) => {
 }
 
 
-export const Get_address = (user_id) => {
+export const Get_address = (user_id, token) => {
     return dispatch => {
-        axios.get(`http://127.0.0.1:8000/api/address/${user_id}`, {
+        axios.get(`http://127.0.0.1:8000/api/get-address/${user_id}`, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -305,12 +324,15 @@ export const Get_address = (user_id) => {
 }
 
 
-export const Edit_address = (user_id,street_address,pin_code,coutry_id) => {
+export const Edit_address = (user_id, street_address, pin_code, coutry_id, token) => {
+    const data = {
+        address: street_address,
+        pincode: pin_code,
+        countryid: coutry_id,
+    }
     return dispatch => {
-        axios.patch(`http://127.0.0.1:8000/api/edit-address/${user_id}`, {
-            address:street_address,
-            pincode:pin_code,
-            countryid:coutry_id,
+        axios.patch(`http://127.0.0.1:8000/api/edit-address/${user_id}`, data, {
+            headers: { "Authorization": `Bearer ${token}` }
         })
             .then(res => {
                 console.log(res)
@@ -318,11 +340,38 @@ export const Edit_address = (user_id,street_address,pin_code,coutry_id) => {
                     type: EDITADDRESSSUCCESS,
                     data: res
                 })
-                dispatch(Get_address(user_id))
+                dispatch(Get_address(user_id, token))
             })
             .catch(err => {
                 dispatch({
                     type: EDITADDRESSFAILL,
+                    error: err
+                })
+
+            })
+    }
+}
+
+
+export const Get_product_by_sub_cat_id = (id,props) => {
+    const data = {
+        id: id
+    }
+    return dispatch => {
+        axios.post("http://127.0.0.1:8000/api/sub_category_data/", data, {
+            // headers: { "Authorization": `Bearer ${token}` }
+        })
+            .then(res => {
+                console.log(res)
+                dispatch({
+                    type: GETDATAOFSUBCATEGORYSUCCESS,
+                    data: res
+                })
+                props.history.push('/productlist')
+            })
+            .catch(err => {
+                dispatch({
+                    type: GETDATAOFSUBCATEGORYFAIL,
                     error: err
                 })
 
